@@ -60,9 +60,9 @@ def dr2ar(day_rate):
 
 
 print('交通分期，每期等额偿还本金及手续费')
-num = [3, 6, 9, 12, 18, 24]
-handling_charge = [42.51, 33.06, 32.91, 14.39, 32.91, 14.39]
-capital = 3888.85
+num = [12, 18, 24]
+handling_charge = [13.17, 13.57, 13.57]
+capital = 3989.91
 handling_charge_rate = []
 dr = []
 ar = []
@@ -81,12 +81,11 @@ if len(num) == len(handling_charge):
 else:
     print('期数有错')
 print()
-
 
 print('招商分期，每期等额偿还本金及手续费')
 num = [2, 3, 6, 10, 12, 18, 24, 36]
-handling_charge = [51.88, 46.69, 38.91, 36.31, 17.4, 17.93, 12.36, 12.36]
-capital = 5273.26
+handling_charge = [51.88, 46.69, 38.91, 36.31, 34.24, 35.28, 35.28, 35.28]
+capital = 5187.59
 handling_charge_rate = []
 dr = []
 ar = []
@@ -105,31 +104,18 @@ if len(num) == len(handling_charge):
 else:
     print('期数有错')
 print()
-
 
 print('广发分期，每期等额偿还本金及手续费')
-num = [3, 6, 12, 18, 24]
-handling_charge = [113.98, 90.66, 90.66, 155.42, 93.25]
-capital = 25903.4
-handling_charge_rate = []
-dr = []
-ar = []
-if len(num) == len(handling_charge):
-    for item in num:
-        # 属于每期等额偿还本金及手续费的情况，将(每期)分期手续费转化为实际(每期)分期手续费率(%)
-        index = num.index(item)
-        handling_charge_rate.append(hc2hcr(handling_charge=handling_charge[index], capital=capital, n=item))
-    for hcr in handling_charge_rate:
-        # 将(每期)分期手续费率(%)转化为日利率(‱)及年利率(%)
-        dr.append(hcr2dr(hcr))
-        ar.append(hcr2ar(hcr))
-    for index in range(len(num)):
-        print('若分%s期,则实际每期手续费率为：%.2f%%，日利率为：%.2f‱，年利率为：%.2f%%'
-              % (num[index], handling_charge_rate[index], dr[index], ar[index]))
-else:
-    print('期数有错')
+num = 3
+handling_charge = (3373.41*3-10000)/3
+capital = 10000
+# 属于每期等额偿还本金及手续费的情况，将(每期)分期手续费转化为实际(每期)分期手续费率(%)
+handling_charge_rate = hc2hcr(handling_charge=handling_charge, capital=capital, n=num)
+# 将(每期)分期手续费率(%)转化为日利率(‱)及年利率(%)
+dr = hcr2dr(handling_charge_rate)
+ar = hcr2ar(handling_charge_rate)
+print('若分%s期，则分期手续费率为：%.2f%%，日利率为：%.2f‱，年利率为：%.2f%%' % (num, handling_charge_rate, dr, ar))
 print()
-
 
 print('中信分期，每期等额偿还本金，手续费在第一期末一次性付清')
 num = [6, 9, 12, 18, 24, 36]
@@ -196,7 +182,6 @@ else:
     print('期数有错')
 print()
 
-
 print('京东白条（还款时分期）：')
 num = [3, 6, 12, 24]
 handling_charge = 11.63
@@ -215,7 +200,6 @@ for index in range(len(num)):
     print('若分%s期,实际每期手续费率为：%.2f%%，则日利率为：%.2f‱，年利率为：%.2f%%'
           % (num[index], handling_charge_rate[index], dr[index], ar[index]))
 print()
-
 
 print('蚂蚁借呗：')
 # 日利率(‱)转年利率(%)
@@ -242,3 +226,44 @@ print('京东金条按月计息：')
 handling_charge_rate = hc2hcr(handling_charge=75, capital=10000, n=3)
 print('金条按月计息年利率：%.2f%%' % (hcr2ar(handling_charge_rate)))
 print()
+
+print('交通抵押消费贷：')
+year_rate = 4.2/100  # 贷款年利率
+capital_remain = 19398.67  # 当期剩余应还本金（元）
+print(f'当月应还利息：{capital_remain*year_rate/12 : .2f}元', '\n')
+
+
+import pandas as pd
+print('用较低利率的借款去提前还清较高利率的信用卡分期是否划算？考虑提前还款违约金，以及可能的已还部分所享受的优惠金额退还')
+print('假定新的低息借款在原信用卡分期的最后一个月末，一次性还本付息；即新的借款全部折算到最后一个月末')
+print('并考虑分期本金及手续费的时间价值，即按低息借款利率（或其他给定利率）将分期本金及手续费也折算到分期的最后一个月末，以保持和新借款的时间价值同步，即都折算到最后一个月末')
+print('不管是提前还款还是分期还款，假定两种情况下，资金都出自同一种时间价值的款项，如都是新的低息借款，或者都是自有资金等，所以需按同一种利率去折算分期本金和手续费；如果是自有资金，则可设为更低的一般性理财利率，但不可设为0')
+capital_each_term = 569.19  # 信用卡分期的每期应还本金（还款方式为每期等额本金及手续费）
+origin_interest_each_term = 92.89  # 不优惠时的原始每期应还手续费
+interest_each_term = [36.45, 46.45, 56.45]  # 享受优惠后（如若有），信用卡分期的每期应还手续费（还款方式为每期等额本金及手续费）
+total_terms = 24  # 分期总期数，月
+residual_terms = [12, 18, 24]  # 剩余未还期数，月
+penalty_rate = 3  # 信用卡分期提前还款收取的违约金与剩余未还本金之比，即违约金率（%）
+year_rate = [3.2, 4.2, 5.2]  # 低息借款年利率（%）。如果是自有资金，则可设为一般性理财利率如2%，而不应设为0；因为这笔自有资金如果不用来还信用卡，也可产生一定的利息。
+
+total_new, total_old = [], []
+for i in interest_each_term:
+    print('-----------------------------------------------------------------------------------------------------------')
+    for j in residual_terms:
+        for k in year_rate:
+            time_value = 0  # 计算将分期本金和手续费折算到最后一个月末时，所需乘的时间价值倍数
+            for n in range(j):
+                time_value += (1+k/100/12)**n  # 利率的指数应取[0,j-1]，而不是[1,j]
+            discounts_already = (origin_interest_each_term - i) * (total_terms - j)  # 需要退还的已享受的优惠金额，如果没有享受过优惠，则为0
+            new = (capital_each_term * j * (1+penalty_rate/100) + discounts_already) * (1+k/100/12*j)  # 新借款项用于提前违约还款在最后一个月末所需支付的总本息
+            old = (capital_each_term + i) * time_value  # 不借款时按原计划分期还款，折算到最后一个月末所需支付的总本息
+            difference = new - old  # 新旧两种方案的差值，若＞0，则新方案即提前还款不划算；若＜0，则提前还款更划算。
+            print(f'if capital_each_term={capital_each_term}, penalty_rate={penalty_rate}%, interest_each_term={i}, residual_terms={j}, year_rate={k}%')
+            if difference >= 0:
+                print(f'提前还款不划算，会多付{difference:.2f}元')
+            else:
+                print(f'提前还款更划算，会少付{-difference:.2f}元')
+            total_new.append((capital_each_term * j * (1+penalty_rate/100) + discounts_already) * (1+k/100/12*j))  # 提前违约还款在最后一个月末所需支付的总本息
+            total_old.append((capital_each_term + i) * time_value)  # 按时分期还款折算到最后一个月末所需支付的总本息
+        print()
+total_difference = pd.Series(total_new) - pd.Series(total_old)

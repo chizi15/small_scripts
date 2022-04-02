@@ -267,3 +267,37 @@ for i in interest_each_term:
             total_old.append((capital_each_term + i) * time_value)  # 按时分期还款折算到最后一个月末所需支付的总本息
         print()
 total_difference = pd.Series(total_new) - pd.Series(total_old)
+
+
+from scipy import optimize
+capital_each_term = 569.19  # 信用卡分期的每期应还本金（还款方式为每期等额本金及手续费）
+origin_interest_each_term = 92.89  # 不优惠时的原始每期应还手续费
+interest_each_term = [36.45]  # 享受优惠后（如若有），信用卡分期的每期应还手续费（还款方式为每期等额本金及手续费）
+total_terms = 24  # 分期总期数，月
+residual_terms = [24]  # 剩余未还期数，月
+penalty_rate = 3  # 信用卡分期提前还款收取的违约金与剩余未还本金之比，即违约金率（%）
+year_rate = [3.2, 4.2]  # 低息借款年利率（%）。如果是自有资金，则可设为一般性理财利率如2%，而不应设为0；因为这笔自有资金如果不用来还信用卡，也可产生一定的利息。
+
+def difference(x, capital_each_term, origin_interest_each_term, interest_each_term, total_terms, residual_terms, penalty_rate):
+     discounts_already = (origin_interest_each_term - interest_each_term) * (total_terms - residual_terms)
+     time_value = 0
+     for n in range(residual_terms):
+         time_value += (1 + x / 100 / 12) ** n
+     new = (capital_each_term * residual_terms * (1 + penalty_rate / 100) + discounts_already) * (1 + x / 100 / 12 * residual_terms)
+     old = (capital_each_term + interest_each_term) * time_value
+     return new - old
+
+for i in interest_each_term:
+    print('-----------------------------------------------------------------------------------------------------------')
+    for j in residual_terms:
+        root_toms748 = optimize.root_scalar(lambda x: difference(x, capital_each_term, origin_interest_each_term, i, total_terms, j, penalty_rate),
+                             bracket=[year_rate[0], year_rate[1]], method='toms748')
+        print(f'采用toms748算法，已知一个函数值异号的区间；迭代求解是否收敛：{root_toms748.converged}', '\n'
+              f'当借款年利率year_rate={root_toms748.root:.3f}时，提前还清借款与按原计划分期还款的总本息相同；', '\n'
+              f'即只有year_rate<{root_toms748.root:.3f}时，新方案提前还清借款才更划算。', '\n')
+
+        root_secant = optimize.root_scalar(f=difference, args = (capital_each_term, origin_interest_each_term,
+                i, total_terms, j, penalty_rate), x0=year_rate[0], x1=year_rate[1], method='secant')
+        print(f'采用secant算法，猜测两个可能的根作为迭代初始值；迭代求解是否收敛：{root_secant.converged}', '\n'
+              f'当借款年利率year_rate={root_secant.root:.3f}时，提前还清借款与按原计划分期还款的总本息相同；', '\n'
+              f'即只有year_rate<{root_secant.root:.3f}时，新方案提前还清借款才更划算。', '\n')

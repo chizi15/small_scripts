@@ -35,7 +35,7 @@ def safe_inv_adj(stockout, period, inventory, balanced_state=None, t=7, w=(1, 2)
         else:
             balanced_state[0] = round(max(balanced_state[0], 1), 2)
             balanced_state[1] = round(balanced_state[1], 2)
-        if stockout_present > balanced_state[0] and period_present <= balanced_state[1]:  # 缺货率高，周转天数低于或等于最优周转天数，应增大安全库存
+        if stockout_present > balanced_state[0] and period_present <= balanced_state[1]:
             delta = np.average([(stockout_present - balanced_state[0] + bias) / (stockout_ub - balanced_state[0] + bias),
                                 (balanced_state[1] - period_present + bias) / (balanced_state[1] - period_lb + bias)],
                                weights=w) * (inventory_ub - base_inv)
